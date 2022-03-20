@@ -43,9 +43,9 @@ router.post('/signup', [
 
     const hashedPassword = await bcrypt.hash(password, 10)
     
-    // ! The second parameter (secret) would normally comne from our .env file becuase its sensitive info
+    // ! The second parameter (secret) would normally come from our .env file becuase its sensitive info
     const token = await JWT.sign({email}, "f33435jdssffa", {expiresIn: 36000} )
-    
+    res.json({token})
     // const sql = `INSERT INTO users (email, password) VALUES (${email}, ${hashedPassword})`
     // connection.query(sql, (err, rows) => {
     //     if (err) {
@@ -55,7 +55,37 @@ router.post('/signup', [
     //         res.json(rows)
     //     }
     // })
-    res.json({token})
+    
+})
+
+router.post('/login', async (req, res) => {
+
+        const { password, email } = req.body;
+
+        let user = users.find((user) => user.email === email)
+
+        if (!user) { return res.status(400).json({
+            "errors": [
+                {
+                    "msg": "invalid credentials",
+                }
+            ]
+        })};
+
+
+        let isMatch = await bcrypt.compare(password, user.password)
+
+        if (!isMatch) { return res.status(400).json({
+            "errors": [
+                {
+                    "msg": "invalid credentials",
+                }
+            ]
+        })};
+
+        const token = await JWT.sign({email}, "f33435jdssffa", {expiresIn: 36000} )
+        res.json({token})
+
 })
 
 router.get('/all', (req, res) => {
