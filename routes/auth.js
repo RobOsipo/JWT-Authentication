@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 const { check, validationResult } = require('express-validator')
 const users = require('../db.js')
+const bcrypt = require('bcrypt')
+const connection = require('../connection.js')
 
 router.post('/signup', [
     // ! This is how I use express validator to *check* if the user input passes my condition, besides isEmail There is isBool, isStrongPassword, etc...
@@ -9,12 +11,12 @@ router.post('/signup', [
     check('password', "Please provide a password greater than 5 characters").isLength({ min: 6 })
 
  
-], (req, res) => {
+], async (req, res) => {
     const { password, email} = req.body;
+
     // * validate the input from user
-    // ! Use validation results with req passed in
     const errors = validationResult(req)
-// ! If the array of errors is not empty, (user input error), throw a 400 error msg with the errors sent to user
+
 
     if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -35,8 +37,21 @@ router.post('/signup', [
             }
         ]
     })}
-    
 
+    // * validate password
+
+    let hashedPassword = await bcrypt.hash(password, 10)
+    console.log(hashedPassword)
+    
+    // const sql = `INSERT INTO users (email, password) VALUES (${email}, ${hashedPassword})`
+    // connection.query(sql, (err, rows) => {
+    //     if (err) {
+    //         console.log(err)
+    //         res.status(404).send('A problem occured' + err.sqlMessage)
+    //     } else {
+    //         res.json(rows)
+    //     }
+    // })
     res.send('Validation Passed')
 })
 
