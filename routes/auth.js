@@ -3,7 +3,8 @@ const router = express.Router()
 const { check, validationResult } = require('express-validator')
 const users = require('../db.js')
 const bcrypt = require('bcrypt')
-const connection = require('../connection.js')
+const JWT = require('jsonwebtoken')
+// const connection = require('../connection.js')
 
 router.post('/signup', [
     // ! This is how I use express validator to *check* if the user input passes my condition, besides isEmail There is isBool, isStrongPassword, etc...
@@ -30,7 +31,7 @@ router.post('/signup', [
         return user.email === email
     })
 
-    if (user) { res.status(400).json({
+    if (user) { return res.status(400).json({
         "errors": [
             {
                 "msg": "This Email already exist"
@@ -40,8 +41,10 @@ router.post('/signup', [
 
     // * validate password
 
-    let hashedPassword = await bcrypt.hash(password, 10)
-    console.log(hashedPassword)
+    const hashedPassword = await bcrypt.hash(password, 10)
+    
+    // ! The second parameter (secret) would normally comne from our .env file becuase its sensitive info
+    const token = await JWT.sign({email}, "f33435jdssffa", {expiresIn: 36000} )
     
     // const sql = `INSERT INTO users (email, password) VALUES (${email}, ${hashedPassword})`
     // connection.query(sql, (err, rows) => {
@@ -52,7 +55,11 @@ router.post('/signup', [
     //         res.json(rows)
     //     }
     // })
-    res.send('Validation Passed')
+    res.json({token})
+})
+
+router.get('/all', (req, res) => {
+    res.json(users)
 })
 
 module.exports = router;
